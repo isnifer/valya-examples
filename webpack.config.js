@@ -1,15 +1,25 @@
 var webpack = require('webpack');
 var path = require('path');
 
+var entry = {};
+var examples = [
+    'original',
+    'async',
+    'initialValidation',
+    'foma',
+    'fomaWarning',
+    'multipleValidators',
+    'externalValidator'
+];
+
+examples.forEach(function (element) {
+    entry[element] = './' + element + '/src';
+});
+
+entry['.'] = './src';
+
 module.exports = {
-    entry: {
-        original: './original/src',
-        async: './async/src',
-        initialValidation: './initialValidation/src',
-        foma: './foma/src',
-        'foma-warning': './foma-warning/src',
-        '.': './src'
-    },
+    entry: entry,
     output: {
         path: __dirname,
         filename: '[name]/index.js'
@@ -17,7 +27,7 @@ module.exports = {
     module: {
         loaders: [
             {
-                test: /\.jsx$/,
+                test: /\.jsx?$/,
                 loader: 'babel',
                 exclude: /node_modules/
             }

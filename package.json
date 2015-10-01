@@ -32,7 +32,8 @@
     "foma": "^0.1.1",
     "foma-warning": "0.0.1",
     "react": "^0.13.3",
-    "valya": "^0.2.0"
+    "valya": "^0.2.0",
+    "valya-standard-validator": "^1.0.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",

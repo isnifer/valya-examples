@@ -4,20 +4,22 @@
 **Решение:** Да у нас же промисы, плевать, что операция асинхронная
 
 ```js
-{
-    validator (value, params) {
-        return new Promise(function (resolve, reject) {
-            setTimeout(() => {
-                if (parseInt(value) + 3 === 45) {
-                    resolve();
-                }
+validators={[
+    {
+        validator (value, params) {
+            return new Promise(function (resolve, reject) {
+                setTimeout(() => {
+                    if (parseInt(value) + 3 === 45) {
+                        resolve();
+                    }
 
-                reject(params.message);
-            }, 1000);
-        });
-    },
-    params: {
-        message: 'Field should be equal 42'
+                    reject(params.message);
+                }, 1000);
+            });
+        },
+        params: {
+            message: 'Field should be equal 42'
+        }
     }
-}
+]}
 ```

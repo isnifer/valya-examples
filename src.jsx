@@ -10,7 +10,13 @@ class ValyaExamples extends Component {
 
         this.state = {
             examples: [
-                'original', 'initialValidation', 'async', 'foma', 'foma-warning'
+                'original',
+                'initialValidation',
+                'async',
+                'foma',
+                'foma-warning',
+                'multipleValidators',
+                'externalValidator'
             ]
         };
     }
