@@ -4,40 +4,122 @@ import cn from 'classnames';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
 import standardValidator from 'valya-standard-validator';
+import assign from 'object-assign';
 
-const { Component } = React;
+const { Component, PropTypes } = React;
 
 const requiredFields = {
-    password: {
-        name: 'awesome password'
-    },
     username: {
         name: 'awesome username'
     },
-    browser: {
-        name: 'the best ever browser',
-        handler: () => {
-            alert('Please, select browser before!');
+    password: {
+        name: 'awesome password'
+    }
+};
+
+const groupFields = {
+    company: {
+        name: 'ex-company'
+    },
+    state: {
+        name: 'state'
+    },
+    position: {
+        name: 'ex-position'
+    }
+};
+
+let groupValidator = (fieldName) => {
+    return {
+        validator: (group, params) => {
+            if (group[fieldName]) {
+                return Promise.resolve();
+            }
+
+            return Promise.reject(params.message);
+        },
+        params: {
+            message: fieldName + ' is required!'
         }
     }
 };
 
 @Foma
-class FomaWarningValya extends Component {
-    static displayName = 'FomaWarningValya';
+class GroupComponent extends Component {
+    static displayName = 'GroupComponent';
+
+    static propTypes = {
+        index: PropTypes.number.isRequired,
+        group: PropTypes.object.isRequired,
+        setGroupField: PropTypes.func.isRequired
+    }
+
+    onEndCallback (name) {
+        return (isValid, message) => {
+            this.props.foma.setValidationInfo({isValid, message, name});
+        }
+    }
+
+    renderFields (fields) {
+        return fields.map((field, i) => {
+            return (
+                <div className="form-group" key={i}>
+                    <Validator
+                        value={this.props.group[field]}
+                        onEnd={this.onEndCallback(field)}
+                        validators={[groupValidator(field)]}>
+                        <input
+                            type="text"
+                            id={field}
+                            name={field}
+                            placeholder={field}
+                            className="form-control"
+                            value={this.props.group[field]}
+                            onChange={this.props.setGroupField.bind(this, field, this.props.index)} />
+                    </Validator>
+                </div>
+            );
+        });
+    }
+
+    render () {
+        return (<div>{this.renderFields(Object.keys(groupFields))}</div>);
+    }
+}
+
+@Foma
+class UnlimitedGroups extends Component {
+    static displayName = 'UnlimitedGroups';
 
     constructor (props) {
         super(props);
 
         this.state = {
-            password: null,
             username: null,
-            browser: null
+            password: null,
+            groups: [
+                {
+                    company: null,
+                    state: null,
+                    position: null
+                }
+            ]
         };
     }
 
     setField (name, e) {
         this.setState({[name]: e.target.value});
+    }
+
+    setGroupField (name, index, e) {
+        let groups = this.state.groups;
+        let group = assign({}, groups[index]);
+
+        group[name] = e.target.value;
+
+        groups[index] = group;
+
+        this.setState({groups: groups});
     }
 
     onSubmit (e) {
@@ -50,8 +132,14 @@ class FomaWarningValya extends Component {
         return e.preventDefault();
     }
 
-    setBrowser (browser) {
-        this.setState({browser: browser});
+    addGroup () {
+        let groups = this.state.groups.concat({
+            company: null,
+            state: null,
+            position: null
+        });
+
+        this.setState({groups: groups});
     }
 
     render () {
@@ -81,6 +169,27 @@ class FomaWarningValya extends Component {
                             onChange={this.setField.bind(this, 'username')} />
                     </Validator>
                 </div>
+
+                {this.state.groups.map((group, i) => {
+                    var props = {
+                        group: group,
+                        setGroupField: ::this.setGroupField,
+                        index: i,
+                        key: i
+                    };
+
+                    return <GroupComponent {...props} />;
+                })}
+
+                <div className="form-group">
+                    <button
+                        type="button"
+                        onClick={::this.addGroup}
+                        className="btn btn-info">
+                        Add group fields
+                    </button>
+                </div>
+
                 <div className="form-group">
                     <label htmlFor="password">Password</label>
                     <Validator
@@ -104,33 +213,7 @@ class FomaWarningValya extends Component {
                             onChange={this.setField.bind(this, 'password')} />
                     </Validator>
                 </div>
-                <div className="form-group">
-                    <label>Set your browser</label>
-                    <div>
-                        <Validator
-                            value={this.state.browser}
-                            onEnd={(isValid, message) => {
-                                this.props.foma.setValidationInfo({
-                                    isValid,
-                                    message,
-                                    name: 'browser'
-                                });
-                            }}
-                            validators={[standardValidator({message: 'Set your browser'})]}
-                            initialValidation={true}>
-                            {['chrome', 'firefox', 'opera', 'safari'].map((browser) => {
-                                return (
-                                    <div
-                                        className={cn(browser, {'selected-browser': this.state.browser === browser})}
-                                        onClick={this.setBrowser.bind(this, browser)}
-                                        key={browser}>
-                                        {browser}
-                                    </div>
-                                );
-                            })}
-                        </Validator>
-                    </div>
-                </div>
+
                 {this.props.foma.renderWarning({
                     message: 'These fields are required:',
                     items: this.props.invalidFields.map((element) => {
@@ -141,6 +224,7 @@ class FomaWarningValya extends Component {
                         };
                     })
                 })}
+
                 <button
                     type="submit"
                     onClick={::this.onSubmit}
@@ -152,4 +236,4 @@ class FomaWarningValya extends Component {
     }
 }
 
-ReactDOM.render(<FomaWarningValya />, document.querySelector('.main'));
+ReactDOM.render(<UnlimitedGroups />, document.querySelector('.main'));

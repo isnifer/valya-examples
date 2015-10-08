@@ -32,6 +32,7 @@
     "classnames": "^2.1.5",
     "foma": "0.x",
     "foma-warning": "0.x",
+    "object-assign": "^4.0.1",
     "react": "^0.14.x",
     "react-dom": "^0.14.0",
     "valya": "^0.2.0",
