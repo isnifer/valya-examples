@@ -57,6 +57,7 @@ class FomaWarningValya extends Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Original Valya Example with Foma and Foma-warning</h2>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
                     <Validator

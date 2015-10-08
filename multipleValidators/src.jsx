@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
+import standardValidator from 'valya-standard-validator';
 
 class MultipleValidators extends React.Component {
     static displayName = 'MultipleValidators';
@@ -20,6 +21,7 @@ class MultipleValidators extends React.Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Valya Example with multiple validators</h2>
                 <Validator
                     value={this.state.value}
                     onStart={() => {
@@ -29,18 +31,7 @@ class MultipleValidators extends React.Component {
                         console.log('Validation end: ', isValid, message);
                     }}
                     validators={[
-                        {
-                            validator (value, params) {
-                                if (value) {
-                                    return Promise.resolve();
-                                }
-
-                                return Promise.reject(params.message);
-                            },
-                            params: {
-                                message: 'Field is required'
-                            }
-                        },
+                        standardValidator(),
                         {
                             validator (value, params) {
                                 if (parseInt(value) > 10) {

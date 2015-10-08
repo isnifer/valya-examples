@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
+import standardValidator from 'valya-standard-validator';
 
 class InitialValidationValya extends React.Component {
     static displayName = 'InitialValidationValya';
@@ -20,6 +21,7 @@ class InitialValidationValya extends React.Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Original Valya Example with Initial Validation</h2>
                 <Validator
                     value={this.state.value}
                     onStart={() => {
@@ -28,20 +30,7 @@ class InitialValidationValya extends React.Component {
                     onEnd={(isValid, message) => {
                         console.log('Validation end: ', isValid, message);
                     }}
-                    validators={[
-                        {
-                            validator (value, params) {
-                                if (value) {
-                                    return Promise.resolve();
-                                }
-
-                                return Promise.reject(params.message);
-                            },
-                            params: {
-                                message: 'Field is required'
-                            }
-                        }
-                    ]}
+                    validators={[standardValidator()]}
                     initialValidation={true}>
                     <input
                         type="text"

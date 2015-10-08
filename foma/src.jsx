@@ -28,6 +28,7 @@ class FomaLovesValya extends React.Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Original Valya Example with Foma</h2>
                 <div className="form-group">
                     <Validator
                         value={this.state.value}

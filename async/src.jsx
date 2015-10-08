@@ -2,9 +2,24 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
 
-const { Component } = React;
+const asyncValidator = {
+    validator (value, params) {
+        return new Promise(function (resolve, reject) {
+            setTimeout(() => {
+                if (parseInt(value) + 3 === 45) {
+                    resolve();
+                }
 
-class AsyncValya extends Component {
+                reject(params.message);
+            }, 1000);
+        });
+    },
+    params: {
+        message: 'Field should be equal 42'
+    }
+};
+
+class AsyncValya extends React.Component {
     static displayName = 'AsyncValya';
 
     constructor (props) {
@@ -22,6 +37,7 @@ class AsyncValya extends Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Async Valya Example</h2>
                 <Validator
                     value={this.state.value}
                     onStart={() => {
@@ -30,24 +46,7 @@ class AsyncValya extends Component {
                     onEnd={(isValid, message) => {
                         console.log('Validation end: ', isValid, message);
                     }}
-                    validators={[
-                        {
-                            validator (value, params) {
-                                return new Promise(function (resolve, reject) {
-                                    setTimeout(() => {
-                                        if (parseInt(value) + 3 === 45) {
-                                            resolve();
-                                        }
-
-                                        reject(params.message);
-                                    }, 1000);
-                                });
-                            },
-                            params: {
-                                message: 'Field should be equal 42'
-                            }
-                        }
-                    ]}>
+                    validators={[asyncValidator]}>
                     <input
                         type="text"
                         id="value"
