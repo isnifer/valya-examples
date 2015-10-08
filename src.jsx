@@ -1,8 +1,7 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 
-const { Component } = React;
-
-class ValyaExamples extends Component {
+class ValyaExamples extends React.Component {
     static displayName = 'ValyaExamples';
 
     constructor (props) {
@@ -12,11 +11,11 @@ class ValyaExamples extends Component {
             examples: [
                 'original',
                 'initialValidation',
+                'multipleValidators',
+                'externalValidator',
                 'async',
                 'foma',
                 'fomaWarning',
-                'multipleValidators',
-                'externalValidator',
                 'birthday',
                 'unlimitedGroups',
                 'emailPhone'
@@ -39,4 +38,4 @@ class ValyaExamples extends Component {
     }
 }
 
-React.render(<ValyaExamples />, document.querySelector('.main'));
+ReactDOM.render(<ValyaExamples />, document.querySelector('.main'));
