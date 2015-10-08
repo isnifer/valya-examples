@@ -1,0 +1,15 @@
+.wrapper {
+    padding: 10px 50px;
+}
+
+.valya-examples {
+    margin: 100px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.valya-examples__item {
+    font-size: 2em;
+    margin-bottom: 10px;
+    color: #333;
+}
