@@ -52,8 +52,6 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
@@ -78,52 +76,88 @@
 
 	var _foma2 = _interopRequireDefault(_foma);
 
-	var _valyaStandardValidator = __webpack_require__(395);
-
-	var _valyaStandardValidator2 = _interopRequireDefault(_valyaStandardValidator);
-
-	var Component = _react2['default'].Component;
-
 	var requiredFields = {
-	    password: {
-	        name: 'awesome password'
+	    email: {
+	        name: 'email',
+	        validator: function validator(_ref) {
+	            var dependentFieldName = _ref.dependentFieldName;
+	            var fieldName = _ref.fieldName;
+
+	            return {
+	                validator: function validator(value, params) {
+	                    if (value[fieldName] || value[dependentFieldName]) {
+	                        return Promise.resolve();
+	                    }
+
+	                    if (!value[dependentFieldName] && !value[fieldName]) {
+	                        return Promise.reject(params.message);
+	                    }
+
+	                    return Promise.reject(params.message);
+	                },
+	                params: {
+	                    message: 'Email is required'
+	                }
+	            };
+	        }
 	    },
-	    username: {
-	        name: 'awesome username'
-	    },
-	    browser: {
-	        name: 'the best ever browser',
-	        handler: function handler() {
-	            alert('Please, select browser before!');
+	    phone: {
+	        name: 'phone',
+	        validator: function validator(_ref2) {
+	            var dependentFieldName = _ref2.dependentFieldName;
+	            var fieldName = _ref2.fieldName;
+
+	            return {
+	                validator: function validator(value, params) {
+	                    if (value[fieldName] || value[dependentFieldName]) {
+	                        return Promise.resolve();
+	                    }
+
+	                    if (!value[dependentFieldName] && !value[fieldName]) {
+	                        return Promise.reject(params.message);
+	                    }
+
+	                    return Promise.reject(params.message);
+	                },
+	                params: {
+	                    message: 'Phone is required'
+	                }
+	            };
 	        }
 	    }
 	};
 
-	var FomaWarningValya = (function (_Component) {
-	    _inherits(FomaWarningValya, _Component);
+	var EmailPhone = (function (_React$Component) {
+	    _inherits(EmailPhone, _React$Component);
 
-	    _createClass(FomaWarningValya, null, [{
+	    _createClass(EmailPhone, null, [{
 	        key: 'displayName',
-	        value: 'FomaWarningValya',
+	        value: 'EmailPhone',
 	        enumerable: true
 	    }]);
 
-	    function FomaWarningValya(props) {
-	        _classCallCheck(this, _FomaWarningValya);
+	    function EmailPhone(props) {
+	        _classCallCheck(this, _EmailPhone);
 
-	        _get(Object.getPrototypeOf(_FomaWarningValya.prototype), 'constructor', this).call(this, props);
+	        _get(Object.getPrototypeOf(_EmailPhone.prototype), 'constructor', this).call(this, props);
 
 	        this.state = {
-	            password: null,
-	            username: null,
-	            browser: null
+	            fields: {
+	                email: null,
+	                phone: null
+	            }
 	        };
 	    }
 
-	    _createClass(FomaWarningValya, [{
+	    _createClass(EmailPhone, [{
 	        key: 'setField',
 	        value: function setField(name, e) {
-	            this.setState(_defineProperty({}, name, e.target.value));
+	            var state = this.state;
+
+	            this.setState({ fields: {
+	                    email: name === 'email' ? e.target.value : this.state.fields.email,
+	                    phone: name === 'phone' ? e.target.value : this.state.fields.phone
+	                } });
 	        }
 	    }, {
 	        key: 'onSubmit',
@@ -137,15 +171,54 @@
 	            return e.preventDefault();
 	        }
 	    }, {
-	        key: 'setBrowser',
-	        value: function setBrowser(browser) {
-	            this.setState({ browser: browser });
+	        key: 'onEndValidation',
+	        value: function onEndValidation(name) {
+	            var _this = this;
+
+	            return function (isValid, message) {
+	                _this.props.foma.setValidationInfo({ isValid: isValid, message: message, name: name });
+	            };
+	        }
+	    }, {
+	        key: 'renderFields',
+	        value: function renderFields(fields) {
+	            var _this2 = this;
+
+	            return fields.map(function (field, i) {
+	                return _react2['default'].createElement(
+	                    'div',
+	                    { className: 'form-group', key: i },
+	                    _react2['default'].createElement(
+	                        'label',
+	                        { htmlFor: field },
+	                        field
+	                    ),
+	                    _react2['default'].createElement(
+	                        _defaultValidator2['default'],
+	                        {
+	                            value: _this2.state.fields,
+	                            onEnd: _this2.onEndValidation(field),
+	                            validators: [requiredFields[field].validator({
+	                                dependentFieldName: field === 'email' ? 'phone' : 'email',
+	                                fieldName: field
+	                            })],
+	                            initialValidation: true },
+	                        _react2['default'].createElement('input', {
+	                            type: 'text',
+	                            id: field,
+	                            name: field,
+	                            placeholder: field,
+	                            className: 'form-control',
+	                            value: _this2.state.fields[field],
+	                            onChange: _this2.setField.bind(_this2, field) })
+	                    )
+	                );
+	            });
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this = this;
-
+	            var fields = ['email', 'phone'];
 	            return _react2['default'].createElement(
 	                'form',
 	                { style: { width: '500px', padding: '50px 0 0 50px' }, noValidate: true },
@@ -154,105 +227,7 @@
 	                    null,
 	                    'Original Valya Example with Foma and Foma-warning'
 	                ),
-	                _react2['default'].createElement(
-	                    'div',
-	                    { className: 'form-group' },
-	                    _react2['default'].createElement(
-	                        'label',
-	                        { htmlFor: 'username' },
-	                        'Username'
-	                    ),
-	                    _react2['default'].createElement(
-	                        _defaultValidator2['default'],
-	                        {
-	                            value: this.state.username,
-	                            onEnd: function (isValid, message) {
-	                                _this.props.foma.setValidationInfo({
-	                                    isValid: isValid,
-	                                    message: message,
-	                                    name: 'username'
-	                                });
-	                            },
-	                            validators: [(0, _valyaStandardValidator2['default'])({ message: 'Username is required' })],
-	                            initialValidation: true },
-	                        _react2['default'].createElement('input', {
-	                            type: 'text',
-	                            id: 'username',
-	                            name: 'username',
-	                            placeholder: 'username',
-	                            className: 'form-control',
-	                            value: this.state.username,
-	                            onChange: this.setField.bind(this, 'username') })
-	                    )
-	                ),
-	                _react2['default'].createElement(
-	                    'div',
-	                    { className: 'form-group' },
-	                    _react2['default'].createElement(
-	                        'label',
-	                        { htmlFor: 'password' },
-	                        'Password'
-	                    ),
-	                    _react2['default'].createElement(
-	                        _defaultValidator2['default'],
-	                        {
-	                            value: this.state.password,
-	                            onEnd: function (isValid, message) {
-	                                _this.props.foma.setValidationInfo({
-	                                    isValid: isValid,
-	                                    message: message,
-	                                    name: 'password'
-	                                });
-	                            },
-	                            validators: [(0, _valyaStandardValidator2['default'])({ message: 'Password is required' })],
-	                            initialValidation: true },
-	                        _react2['default'].createElement('input', {
-	                            type: 'text',
-	                            id: 'password',
-	                            name: 'password',
-	                            placeholder: 'password',
-	                            className: 'form-control',
-	                            value: this.state.value,
-	                            onChange: this.setField.bind(this, 'password') })
-	                    )
-	                ),
-	                _react2['default'].createElement(
-	                    'div',
-	                    { className: 'form-group' },
-	                    _react2['default'].createElement(
-	                        'label',
-	                        null,
-	                        'Set your browser'
-	                    ),
-	                    _react2['default'].createElement(
-	                        'div',
-	                        null,
-	                        _react2['default'].createElement(
-	                            _defaultValidator2['default'],
-	                            {
-	                                value: this.state.browser,
-	                                onEnd: function (isValid, message) {
-	                                    _this.props.foma.setValidationInfo({
-	                                        isValid: isValid,
-	                                        message: message,
-	                                        name: 'browser'
-	                                    });
-	                                },
-	                                validators: [(0, _valyaStandardValidator2['default'])({ message: 'Set your browser' })],
-	                                initialValidation: true },
-	                            ['chrome', 'firefox', 'opera', 'safari'].map(function (browser) {
-	                                return _react2['default'].createElement(
-	                                    'div',
-	                                    {
-	                                        className: (0, _classnames2['default'])(browser, { 'selected-browser': _this.state.browser === browser }),
-	                                        onClick: _this.setBrowser.bind(_this, browser),
-	                                        key: browser },
-	                                    browser
-	                                );
-	                            })
-	                        )
-	                    )
-	                ),
+	                this.renderFields(fields),
 	                this.props.foma.renderWarning({
 	                    message: 'These fields are required:',
 	                    items: this.props.invalidFields.map(function (element) {
@@ -275,12 +250,12 @@
 	        }
 	    }]);
 
-	    var _FomaWarningValya = FomaWarningValya;
-	    FomaWarningValya = (0, _foma2['default'])(FomaWarningValya) || FomaWarningValya;
-	    return FomaWarningValya;
-	})(Component);
+	    var _EmailPhone = EmailPhone;
+	    EmailPhone = (0, _foma2['default'])(EmailPhone) || EmailPhone;
+	    return EmailPhone;
+	})(_react2['default'].Component);
 
-	_reactDom2['default'].render(_react2['default'].createElement(FomaWarningValya, null), document.querySelector('.main'));
+	_reactDom2['default'].render(_react2['default'].createElement(EmailPhone, null), document.querySelector('.main'));
 
 /***/ },
 /* 1 */
@@ -41286,34 +41261,6 @@
 
 	module.exports = deprecated;
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4)))
-
-/***/ },
-/* 395 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-
-	exports['default'] = function (props) {
-	    return {
-	        validator: function validator(value, params) {
-	            if (value) {
-	                return Promise.resolve(true);
-	            }
-
-	            return Promise.reject(params.message);
-	        },
-	        params: {
-	            message: props && props.message || 'Field is required'
-	        }
-	    };
-	};
-
-	module.exports = exports['default'];
-
 
 /***/ }
 /******/ ]);

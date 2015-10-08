@@ -3,41 +3,74 @@ import ReactDOM from 'react-dom';
 import cn from 'classnames';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
-import standardValidator from 'valya-standard-validator';
-
-const { Component } = React;
 
 const requiredFields = {
-    password: {
-        name: 'awesome password'
+    email: {
+        name: 'email',
+        validator: ({dependentFieldName, fieldName}) => {
+            return {
+                validator: (value, params) => {
+                    if (value[fieldName] || value[dependentFieldName]) {
+                        return Promise.resolve();
+                    }
+
+                    if (!value[dependentFieldName] && !value[fieldName]) {
+                        return Promise.reject(params.message);
+                    }
+
+                    return Promise.reject(params.message);
+                },
+                params: {
+                    message: 'Email is required'
+                }
+            }
+        }
     },
-    username: {
-        name: 'awesome username'
-    },
-    browser: {
-        name: 'the best ever browser',
-        handler: () => {
-            alert('Please, select browser before!');
+    phone: {
+        name: 'phone',
+        validator: ({dependentFieldName, fieldName}) => {
+            return {
+                validator: (value, params) => {
+                    if (value[fieldName] || value[dependentFieldName]) {
+                        return Promise.resolve();
+                    }
+
+                    if (!value[dependentFieldName] && !value[fieldName]) {
+                        return Promise.reject(params.message);
+                    }
+
+                    return Promise.reject(params.message);
+                },
+                params: {
+                    message: 'Phone is required'
+                }
+            }
         }
     }
 };
 
 @Foma
-class FomaWarningValya extends Component {
-    static displayName = 'FomaWarningValya';
+class EmailPhone extends React.Component {
+    static displayName = 'EmailPhone';
 
     constructor (props) {
         super(props);
 
         this.state = {
-            password: null,
-            username: null,
-            browser: null
+            fields: {
+                email: null,
+                phone: null
+            }
         };
     }
 
     setField (name, e) {
-        this.setState({[name]: e.target.value});
+        var state = this.state;
+
+        this.setState({fields: {
+            email: name === 'email' ? e.target.value : this.state.fields.email,
+            phone: name === 'phone' ? e.target.value : this.state.fields.phone
+        }});
     }
 
     onSubmit (e) {
@@ -50,87 +83,45 @@ class FomaWarningValya extends Component {
         return e.preventDefault();
     }
 
-    setBrowser (browser) {
-        this.setState({browser: browser});
+    onEndValidation (name) {
+        return (isValid, message) => {
+            this.props.foma.setValidationInfo({isValid, message, name});
+        }
+    }
+
+    renderFields (fields) {
+        return fields.map((field, i) => {
+            return (
+                <div className="form-group" key={i}>
+                    <label htmlFor={field}>{field}</label>
+                    <Validator
+                        value={this.state.fields}
+                        onEnd={this.onEndValidation(field)}
+                        validators={[requiredFields[field].validator({
+                            dependentFieldName: field === 'email' ? 'phone' : 'email',
+                            fieldName: field
+                        })]}
+                        initialValidation={true}>
+                        <input
+                            type="text"
+                            id={field}
+                            name={field}
+                            placeholder={field}
+                            className="form-control"
+                            value={this.state.fields[field]}
+                            onChange={this.setField.bind(this, field)} />
+                    </Validator>
+                </div>
+            );
+        });
     }
 
     render () {
+        const fields = ['email', 'phone'];
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
                 <h2>Original Valya Example with Foma and Foma-warning</h2>
-                <div className="form-group">
-                    <label htmlFor="username">Username</label>
-                    <Validator
-                        value={this.state.username}
-                        onEnd={(isValid, message) => {
-                            this.props.foma.setValidationInfo({
-                                isValid,
-                                message,
-                                name: 'username'
-                            });
-                        }}
-                        validators={[standardValidator({message: 'Username is required'})]}
-                        initialValidation={true}>
-                        <input
-                            type="text"
-                            id="username"
-                            name="username"
-                            placeholder="username"
-                            className="form-control"
-                            value={this.state.username}
-                            onChange={this.setField.bind(this, 'username')} />
-                    </Validator>
-                </div>
-                <div className="form-group">
-                    <label htmlFor="password">Password</label>
-                    <Validator
-                        value={this.state.password}
-                        onEnd={(isValid, message) => {
-                            this.props.foma.setValidationInfo({
-                                isValid,
-                                message,
-                                name: 'password'
-                            });
-                        }}
-                        validators={[standardValidator({message: 'Password is required'})]}
-                        initialValidation={true}>
-                        <input
-                            type="text"
-                            id="password"
-                            name="password"
-                            placeholder="password"
-                            className="form-control"
-                            value={this.state.value}
-                            onChange={this.setField.bind(this, 'password')} />
-                    </Validator>
-                </div>
-                <div className="form-group">
-                    <label>Set your browser</label>
-                    <div>
-                        <Validator
-                            value={this.state.browser}
-                            onEnd={(isValid, message) => {
-                                this.props.foma.setValidationInfo({
-                                    isValid,
-                                    message,
-                                    name: 'browser'
-                                });
-                            }}
-                            validators={[standardValidator({message: 'Set your browser'})]}
-                            initialValidation={true}>
-                            {['chrome', 'firefox', 'opera', 'safari'].map((browser) => {
-                                return (
-                                    <div
-                                        className={cn(browser, {'selected-browser': this.state.browser === browser})}
-                                        onClick={this.setBrowser.bind(this, browser)}
-                                        key={browser}>
-                                        {browser}
-                                    </div>
-                                );
-                            })}
-                        </Validator>
-                    </div>
-                </div>
+                {this.renderFields(fields)}
                 {this.props.foma.renderWarning({
                     message: 'These fields are required:',
                     items: this.props.invalidFields.map((element) => {
@@ -152,4 +143,4 @@ class FomaWarningValya extends Component {
     }
 }
 
-ReactDOM.render(<FomaWarningValya />, document.querySelector('.main'));
+ReactDOM.render(<EmailPhone />, document.querySelector('.main'));
