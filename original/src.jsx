@@ -20,6 +20,8 @@ class OriginalValya extends React.Component {
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
+                <h2>Original Valya Example</h2>
+                <label htmlFor="value">Type something, then delete</label>
                 <Validator
                     value={this.state.value}
                     onStart={() => {
