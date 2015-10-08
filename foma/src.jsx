@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
+import standardValidator from 'valya-standard-validator';
 
 @Foma
 class FomaLovesValya extends React.Component {
@@ -19,49 +20,40 @@ class FomaLovesValya extends React.Component {
         this.setState({value: e.target.value});
     }
 
-    onSubmit () {
+    onSubmit (e) {
+        e.preventDefault();
         alert('You successfully submited form!');
     }
 
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
-                <Validator
-                    value={this.state.value}
-                    onEnd={(isValid, message) => {
-                        this.props.setValidationInfo({
-                            isValid,
-                            message,
-                            name: 'value'
-                        });
-                    }}
-                    validators={[
-                        {
-                            validator (value, params) {
-                                if (value) {
-                                    return Promise.resolve();
-                                }
-
-                                return Promise.reject(params.message);
-                            },
-                            params: {
-                                message: 'Field is required'
-                            }
-                        }
-                    ]}
-                    initialValidation={true}>
-                    <input
-                        type="text"
-                        id="value"
-                        name="value"
-                        className="form-control"
+                <div className="form-group">
+                    <Validator
                         value={this.state.value}
-                        onChange={::this.setValue} />
-                </Validator>
-                <div>
+                        onEnd={(isValid, message) => {
+                            this.props.foma.setValidationInfo({
+                                isValid,
+                                message,
+                                name: 'value'
+                            });
+                        }}
+                        validators={[standardValidator()]}
+                        initialValidation={true}>
+                        <input
+                            type="text"
+                            id="value"
+                            name="value"
+                            className="form-control"
+                            value={this.state.value}
+                            onChange={::this.setValue} />
+                    </Validator>
+                </div>
+                <div className="form-group">
                     <button
                         type="submit"
                         onClick={::this.onSubmit}
+                        className="btn btn-success"
                         disabled={this.props.isInvalid}>
                         Submit
                     </button>
