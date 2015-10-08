@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
-const externalValidator = require('valya-standard-validator')({message: 'Custom message warning'});
+import standardValidator from 'valya-standard-validator';
 
 class OriginalValya extends React.Component {
     static displayName = 'OriginalValya';
@@ -29,7 +29,9 @@ class OriginalValya extends React.Component {
                     onEnd={(isValid, message) => {
                         console.log('Validation end: ', isValid, message);
                     }}
-                    validators={[externalValidator]}
+                    validators={[standardValidator({
+                        message: 'Custom message warning from external validator. Watch your console'
+                    })]}
                     initialValidation={true}>
                     <input
                         type="text"
