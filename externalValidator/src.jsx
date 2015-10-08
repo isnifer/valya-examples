@@ -1,39 +1,9 @@
 import React from 'react';
-import Valya from 'valya';
+import ReactDOM from 'react-dom';
+import Validator from '../defaultValidator';
 const externalValidator = require('valya-standard-validator')({message: 'Custom message warning'});
 
-const { Component } = React;
-
-@Valya
-class Validator extends Component {
-    static displayName = 'Validator';
-
-    _renderError() {
-        if (!this.props.enabled || this.props.isValid) {
-            return null;
-        }
-
-        return (
-            <span className="validator__error" key="error">
-                {this.props.validationErrorMessage}
-            </span>
-        );
-    }
-
-    render () {
-
-        return (
-            <span className="validator">
-                <span className="validator__target" key="target">
-                    {this.props.children}
-                </span>
-                {this._renderError()}
-            </span>
-        );
-    }
-}
-
-class OriginalValya extends Component {
+class OriginalValya extends React.Component {
     static displayName = 'OriginalValya';
 
     constructor (props) {
@@ -74,4 +44,4 @@ class OriginalValya extends Component {
     }
 }
 
-React.render(<OriginalValya />, document.querySelector('.main'));
+ReactDOM.render(<OriginalValya />, document.querySelector('.main'));

@@ -1,42 +1,26 @@
 import React from 'react';
-import Valya from 'valya';
+import ReactDOM from 'react-dom';
+import cn from 'classnames';
+import Validator from '../defaultValidator';
 import Foma from 'foma';
-import FomaWarning from 'foma-warning';
+import standardValidator from 'valya-standard-validator';
 
 const { Component } = React;
+
 const requiredFields = {
-    value: 'value for form',
-    username: 'username'
-};
-
-@Valya
-class Validator extends Component {
-    static displayName = 'Validator';
-
-    _renderError() {
-        if (!this.props.enabled || this.props.isValid) {
-            return null;
+    password: {
+        name: 'awesome password'
+    },
+    username: {
+        name: 'awesome username'
+    },
+    browser: {
+        name: 'the best ever browser',
+        handler: () => {
+            alert('Please, select browser before!');
         }
-
-        return (
-            <span className="validator__error" key="error">
-                {this.props.validationErrorMessage}
-            </span>
-        );
     }
-
-    render () {
-
-        return (
-            <span className="validator">
-                <span className="validator__target" key="target">
-                    {this.props.children}
-                </span>
-                {this._renderError()}
-            </span>
-        );
-    }
-}
+};
 
 @Foma
 class FomaWarningValya extends Component {
@@ -46,8 +30,9 @@ class FomaWarningValya extends Component {
         super(props);
 
         this.state = {
-            value: null,
-            username: null
+            password: null,
+            username: null,
+            browser: null
         };
     }
 
@@ -56,102 +41,114 @@ class FomaWarningValya extends Component {
     }
 
     onSubmit (e) {
-        e.preventDefault();
-
         if (this.props.isValid) {
-            alert('You successfully submited form!');
+            alert('You are awesome!');
+        } else {
+            this.props.foma.viewWarning(true);
         }
+
+        return e.preventDefault();
+    }
+
+    setBrowser (browser) {
+        this.setState({browser: browser});
     }
 
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
-                <div>
-                    <Validator
-                        value={this.state.value}
-                        onEnd={(isValid, message) => {
-                            this.props.setValidationInfo({
-                                isValid,
-                                message,
-                                name: 'value'
-                            });
-                        }}
-                        validators={[
-                            {
-                                validator (value, params) {
-                                    if (value) {
-                                        return Promise.resolve();
-                                    }
-
-                                    return Promise.reject(params.message);
-                                },
-                                params: {
-                                    message: 'Value is required'
-                                }
-                            }
-                        ]}
-                        initialValidation={true}>
-                        <input
-                            type="text"
-                            id="value"
-                            name="value"
-                            className="form-control"
-                            value={this.state.value}
-                            onChange={this.setField.bind(this, 'value')} />
-                    </Validator>
-                </div>
-                <div>
+                <div className="form-group">
+                    <label htmlFor="username">Username</label>
                     <Validator
                         value={this.state.username}
                         onEnd={(isValid, message) => {
-                            this.props.setValidationInfo({
+                            this.props.foma.setValidationInfo({
                                 isValid,
                                 message,
                                 name: 'username'
                             });
                         }}
-                        validators={[
-                            {
-                                validator (value, params) {
-                                    if (value) {
-                                        return Promise.resolve();
-                                    }
-
-                                    return Promise.reject(params.message);
-                                },
-                                params: {
-                                    message: 'Username is required'
-                                }
-                            }
-                        ]}
+                        validators={[standardValidator({message: 'Username is required'})]}
                         initialValidation={true}>
                         <input
                             type="text"
                             id="username"
                             name="username"
+                            placeholder="username"
                             className="form-control"
                             value={this.state.username}
                             onChange={this.setField.bind(this, 'username')} />
                     </Validator>
                 </div>
-                <FomaWarning
-                    items={this.props.invalidFields.map(function (element) {
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <Validator
+                        value={this.state.password}
+                        onEnd={(isValid, message) => {
+                            this.props.foma.setValidationInfo({
+                                isValid,
+                                message,
+                                name: 'password'
+                            });
+                        }}
+                        validators={[standardValidator({message: 'Password is required'})]}
+                        initialValidation={true}>
+                        <input
+                            type="text"
+                            id="password"
+                            name="password"
+                            placeholder="password"
+                            className="form-control"
+                            value={this.state.value}
+                            onChange={this.setField.bind(this, 'password')} />
+                    </Validator>
+                </div>
+                <div className="form-group">
+                    <label>Set your browser</label>
+                    <div>
+                        <Validator
+                            value={this.state.browser}
+                            onEnd={(isValid, message) => {
+                                this.props.foma.setValidationInfo({
+                                    isValid,
+                                    message,
+                                    name: 'browser'
+                                });
+                            }}
+                            validators={[standardValidator({message: 'Set your browser'})]}
+                            initialValidation={true}>
+                            {['chrome', 'firefox', 'opera', 'safari'].map((browser) => {
+                                return (
+                                    <div
+                                        className={cn(browser, {'selected-browser': this.state.browser === browser})}
+                                        onClick={this.setBrowser.bind(this, browser)}
+                                        key={browser}>
+                                        {browser}
+                                    </div>
+                                );
+                            })}
+                        </Validator>
+                    </div>
+                </div>
+                {this.props.foma.renderWarning({
+                    message: 'These fields are required:',
+                    items: this.props.invalidFields.map((element) => {
                         return {
                             fieldName: element,
-                            name: requiredFields[element]
+                            name: requiredFields[element].name,
+                            handler: requiredFields[element].handler
                         };
-                    })}
-                    message="These fields are required:">
-                    <button
-                        type="submit"
-                        onClick={::this.onSubmit}
-                        style={this.props.isInvalid ? {opacity: .5} : {}}>
-                        Submit
-                    </button>
-                </FomaWarning>
+                    })
+                })}
+                <button
+                    type="submit"
+                    onClick={::this.onSubmit}
+                    className={cn('btn btn-success', {disabled: this.props.isInvalid})}>
+                    Submit
+                </button>
             </form>
         );
     }
 }
 
-React.render(<FomaWarningValya />, document.querySelector('.main'));
+ReactDOM.render(<FomaWarningValya />, document.querySelector('.main'));

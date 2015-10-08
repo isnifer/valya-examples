@@ -1,36 +1,8 @@
 import React from 'react';
-import Valya from 'valya';
+import ReactDOM from 'react-dom';
+import Validator from '../defaultValidator';
 
 const { Component } = React;
-
-@Valya
-class Validator extends Component {
-    static displayName = 'Validator';
-
-    _renderError() {
-        if (!this.props.enabled || this.props.isValid) {
-            return null;
-        }
-
-        return (
-            <span className="validator__error" key="error">
-                {this.props.validationErrorMessage}
-            </span>
-        );
-    }
-
-    render () {
-
-        return (
-            <span className="validator">
-                <span className="validator__target" key="target">
-                    {this.props.children}
-                </span>
-                {this._renderError()}
-            </span>
-        );
-    }
-}
 
 class AsyncValya extends Component {
     static displayName = 'AsyncValya';
@@ -89,4 +61,4 @@ class AsyncValya extends Component {
     }
 }
 
-React.render(<AsyncValya />, document.querySelector('.main'));
+ReactDOM.render(<AsyncValya />, document.querySelector('.main'));

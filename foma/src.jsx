@@ -1,40 +1,10 @@
 import React from 'react';
-import Valya from 'valya';
+import ReactDOM from 'react-dom';
+import Validator from '../defaultValidator';
 import Foma from 'foma';
 
-const { Component } = React;
-
-@Valya
-class Validator extends Component {
-    static displayName = 'Validator';
-
-    _renderError() {
-        if (!this.props.enabled || this.props.isValid) {
-            return null;
-        }
-
-        return (
-            <span className="validator__error" key="error">
-                {this.props.validationErrorMessage}
-            </span>
-        );
-    }
-
-    render () {
-
-        return (
-            <span className="validator">
-                <span className="validator__target" key="target">
-                    {this.props.children}
-                </span>
-                {this._renderError()}
-            </span>
-        );
-    }
-}
-
 @Foma
-class FomaLovesValya extends Component {
+class FomaLovesValya extends React.Component {
     static displayName = 'FomaLovesValya';
 
     constructor (props) {
@@ -101,4 +71,4 @@ class FomaLovesValya extends Component {
     }
 }
 
-React.render(<FomaLovesValya />, document.querySelector('.main'));
+ReactDOM.render(<FomaLovesValya />, document.querySelector('.main'));

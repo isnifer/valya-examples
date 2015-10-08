@@ -14,9 +14,12 @@ class ValyaExamples extends Component {
                 'initialValidation',
                 'async',
                 'foma',
-                'foma-warning',
+                'fomaWarning',
                 'multipleValidators',
-                'externalValidator'
+                'externalValidator',
+                'birthday',
+                'unlimitedGroups',
+                'emailPhone'
             ]
         };
     }

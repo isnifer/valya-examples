@@ -29,9 +29,11 @@
   },
   "homepage": "https://github.com/isnifer/valya-examples#readme",
   "dependencies": {
-    "foma": "^0.1.1",
-    "foma-warning": "0.0.1",
-    "react": "^0.13.3",
+    "classnames": "^2.1.5",
+    "foma": "0.x",
+    "foma-warning": "0.x",
+    "react": "^0.14.x",
+    "react-dom": "^0.14.0",
     "valya": "^0.2.0",
     "valya-standard-validator": "^1.0.0"
   },
