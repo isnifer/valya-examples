@@ -4,12 +4,15 @@ var path = require('path');
 var entry = {};
 var examples = [
     'original',
-    'async',
     'initialValidation',
+    'multipleValidators',
+    'externalValidator',
+    'async',
     'foma',
     'fomaWarning',
-    'multipleValidators',
-    'externalValidator'
+    'birthday',
+    'unlimitedGroups',
+    'emailPhone'
 ];
 
 examples.forEach(function (element) {
