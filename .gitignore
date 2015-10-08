@@ -1,2 +1,4 @@
 node_modules
-index.js
+*/index.js
+/index.js
+!defaultValidator/index.js
