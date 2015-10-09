@@ -82,48 +82,228 @@
 
 	var _valyaStandardValidator2 = _interopRequireDefault(_valyaStandardValidator);
 
+	var _objectAssign = __webpack_require__(396);
+
+	var _objectAssign2 = _interopRequireDefault(_objectAssign);
+
 	var Component = _react2['default'].Component;
+	var PropTypes = _react2['default'].PropTypes;
 
 	var requiredFields = {
-	    password: {
-	        name: 'awesome password'
-	    },
 	    username: {
 	        name: 'awesome username'
 	    },
-	    browser: {
-	        name: 'the best ever browser',
-	        handler: function handler() {
-	            alert('Please, select browser before!');
-	        }
+	    password: {
+	        name: 'awesome password'
 	    }
 	};
 
-	var FomaWarningValya = (function (_Component) {
-	    _inherits(FomaWarningValya, _Component);
+	var groupFields = {
+	    company: {
+	        name: 'ex-company'
+	    },
+	    state: {
+	        name: 'state'
+	    },
+	    position: {
+	        name: 'ex-position'
+	    }
+	};
 
-	    _createClass(FomaWarningValya, null, [{
+	var groupFieldValidator = function groupFieldValidator(fieldName, invalidFields) {
+	    return {
+	        validator: function validator(value, params) {
+	            if (value && parseInt(value) === 10 || !value && !invalidFields.length || !value && invalidFields.length === 1 && invalidFields[0] === fieldName) {
+	                return Promise.resolve();
+	            }
+
+	            return Promise.reject(params.message);
+	        },
+	        params: {
+	            message: fieldName + ' is required!'
+	        }
+	    };
+	};
+
+	var GroupComponent = (function (_Component) {
+	    _inherits(GroupComponent, _Component);
+
+	    function GroupComponent() {
+	        _classCallCheck(this, _GroupComponent);
+
+	        _get(Object.getPrototypeOf(_GroupComponent.prototype), 'constructor', this).apply(this, arguments);
+	    }
+
+	    _createClass(GroupComponent, [{
+	        key: 'onEndCallback',
+	        value: function onEndCallback(name) {
+	            var _this = this;
+
+	            return function (isValid, message) {
+	                _this.props.foma.setValidationInfo({ isValid: isValid, message: message, name: name });
+	            };
+	        }
+	    }, {
+	        key: 'renderFields',
+	        value: function renderFields(fields) {
+	            var _this2 = this;
+
+	            return fields.map(function (field, i) {
+	                return _react2['default'].createElement(
+	                    'div',
+	                    { className: 'form-group', key: i },
+	                    _react2['default'].createElement(
+	                        _defaultValidator2['default'],
+	                        {
+	                            value: _this2.props.group[field],
+	                            onEnd: _this2.onEndCallback(field),
+	                            validators: [groupFieldValidator(field, _this2.props.invalidFields)],
+	                            silentInitValidation: true },
+	                        _react2['default'].createElement('input', {
+	                            type: 'text',
+	                            id: field,
+	                            name: field,
+	                            placeholder: field,
+	                            className: 'form-control',
+	                            value: _this2.props.group[field],
+	                            onChange: _this2.props.setGroupField.bind(_this2, field, _this2.props.index) })
+	                    )
+	                );
+	            });
+	        }
+	    }, {
+	        key: 'groupOnEndCallback',
+	        value: function groupOnEndCallback(name) {
+	            var _this3 = this;
+
+	            return function (isValid, message) {
+	                _this3.props.updateParentValidation({ isValid: isValid, message: message, name: name });
+	            };
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this4 = this;
+
+	            var fields = Object.keys(groupFields);
+
+	            return _react2['default'].createElement(
+	                'div',
+	                { className: 'form-field' },
+	                this.renderFields(fields),
+	                _react2['default'].createElement(_defaultValidator2['default'], {
+	                    value: this.props.group,
+	                    onEnd: this.groupOnEndCallback('group ' + (this.props.index + 1)),
+	                    silentInitValidation: true,
+	                    validators: [{
+	                        validator: function validator(group, params) {
+	                            var notEmptyFields = fields.filter(function (e, i) {
+	                                return !(group[e] === '' || !group[e]);
+	                            });
+
+	                            var allFieldsAreEmpty = !notEmptyFields.length;
+	                            var allRequiredFieldsFilled = notEmptyFields.length === fields.length;
+
+	                            if (allFieldsAreEmpty) {
+
+	                                // Если групп две и более, то надо
+	                                // проверить индекс конкретной группы
+	                                // если он 0, то реджектить
+	                                if (_this4.props.allGroups.length === 1) {
+	                                    return Promise.reject(params.allFieldsRequired);
+	                                }
+
+	                                if (_this4.props.allGroups.length > 1 && !_this4.props.index) {
+	                                    return Promise.reject(params.allFieldsRequired);
+	                                }
+
+	                                return Promise.resolve();
+	                            }
+
+	                            if (allRequiredFieldsFilled) {
+	                                return new Promise(function (resolve, reject) {
+	                                    setTimeout(function () {
+	                                        if (_this4.props.isValid) {
+	                                            resolve();
+	                                        } else {
+	                                            reject(params.haveInvalidFields);
+	                                        }
+	                                    }, 0);
+	                                });
+	                            }
+
+	                            return Promise.reject(params.allFieldsRequired);
+	                        },
+	                        params: {
+	                            allFieldsRequired: 'All fields are required',
+	                            haveInvalidFields: 'You have invalid fields, fix it'
+	                        }
+	                    }] })
+	            );
+	        }
+	    }], [{
 	        key: 'displayName',
-	        value: 'FomaWarningValya',
+	        value: 'GroupComponent',
+	        enumerable: true
+	    }, {
+	        key: 'propTypes',
+	        value: {
+	            index: PropTypes.number.isRequired,
+	            group: PropTypes.object.isRequired,
+	            setGroupField: PropTypes.func.isRequired,
+	            updateParentValidation: PropTypes.func.isRequired,
+	            allGroups: PropTypes.array.isRequired,
+	            allInvalidGroups: PropTypes.number.isRequired
+	        },
 	        enumerable: true
 	    }]);
 
-	    function FomaWarningValya(props) {
-	        _classCallCheck(this, _FomaWarningValya);
+	    var _GroupComponent = GroupComponent;
+	    GroupComponent = (0, _foma2['default'])(GroupComponent) || GroupComponent;
+	    return GroupComponent;
+	})(Component);
 
-	        _get(Object.getPrototypeOf(_FomaWarningValya.prototype), 'constructor', this).call(this, props);
+	var UnlimitedGroups = (function (_Component2) {
+	    _inherits(UnlimitedGroups, _Component2);
+
+	    _createClass(UnlimitedGroups, null, [{
+	        key: 'displayName',
+	        value: 'UnlimitedGroups',
+	        enumerable: true
+	    }]);
+
+	    function UnlimitedGroups(props) {
+	        _classCallCheck(this, _UnlimitedGroups);
+
+	        _get(Object.getPrototypeOf(_UnlimitedGroups.prototype), 'constructor', this).call(this, props);
 
 	        this.state = {
-	            password: null,
 	            username: null,
-	            browser: null
+	            password: null,
+	            groups: [{
+	                company: null,
+	                state: null,
+	                position: null
+	            }]
 	        };
 	    }
 
-	    _createClass(FomaWarningValya, [{
+	    _createClass(UnlimitedGroups, [{
 	        key: 'setField',
 	        value: function setField(name, e) {
 	            this.setState(_defineProperty({}, name, e.target.value));
+	        }
+	    }, {
+	        key: 'setGroupField',
+	        value: function setGroupField(name, index, e) {
+	            var groups = this.state.groups;
+	            var group = (0, _objectAssign2['default'])({}, groups[index]);
+
+	            group[name] = e.target.value;
+
+	            groups[index] = group;
+
+	            this.setState({ groups: groups });
 	        }
 	    }, {
 	        key: 'onSubmit',
@@ -137,14 +317,20 @@
 	            return e.preventDefault();
 	        }
 	    }, {
-	        key: 'setBrowser',
-	        value: function setBrowser(browser) {
-	            this.setState({ browser: browser });
+	        key: 'addGroup',
+	        value: function addGroup() {
+	            var groups = this.state.groups.concat({
+	                company: null,
+	                state: null,
+	                position: null
+	            });
+
+	            this.setState({ groups: groups });
 	        }
 	    }, {
 	        key: 'render',
 	        value: function render() {
-	            var _this = this;
+	            var _this5 = this;
 
 	            return _react2['default'].createElement(
 	                'form',
@@ -167,14 +353,14 @@
 	                        {
 	                            value: this.state.username,
 	                            onEnd: function (isValid, message) {
-	                                _this.props.foma.setValidationInfo({
+	                                _this5.props.foma.setValidationInfo({
 	                                    isValid: isValid,
 	                                    message: message,
 	                                    name: 'username'
 	                                });
 	                            },
 	                            validators: [(0, _valyaStandardValidator2['default'])({ message: 'Username is required' })],
-	                            initialValidation: true },
+	                            silentInitValidation: true },
 	                        _react2['default'].createElement('input', {
 	                            type: 'text',
 	                            id: 'username',
@@ -183,6 +369,38 @@
 	                            className: 'form-control',
 	                            value: this.state.username,
 	                            onChange: this.setField.bind(this, 'username') })
+	                    )
+	                ),
+	                _react2['default'].createElement(
+	                    'label',
+	                    { htmlFor: 'field' },
+	                    'UnlimitedGroups here'
+	                ),
+	                this.state.groups.map(function (group, i) {
+	                    var _context;
+
+	                    var props = {
+	                        group: group,
+	                        allGroups: _this5.state.groups,
+	                        allInvalidGroups: _this5.props.childrenInvalidFields.length,
+	                        setGroupField: _this5.setGroupField.bind(_this5),
+	                        updateParentValidation: (_context = _this5.props.foma).setChildrenValidationInfo.bind(_context),
+	                        index: i,
+	                        key: i
+	                    };
+
+	                    return _react2['default'].createElement(GroupComponent, props);
+	                }),
+	                _react2['default'].createElement(
+	                    'div',
+	                    { className: 'form-group' },
+	                    _react2['default'].createElement(
+	                        'button',
+	                        {
+	                            type: 'button',
+	                            onClick: this.addGroup.bind(this),
+	                            className: 'btn btn-info' },
+	                        'Add group fields'
 	                    )
 	                ),
 	                _react2['default'].createElement(
@@ -198,14 +416,14 @@
 	                        {
 	                            value: this.state.password,
 	                            onEnd: function (isValid, message) {
-	                                _this.props.foma.setValidationInfo({
+	                                _this5.props.foma.setValidationInfo({
 	                                    isValid: isValid,
 	                                    message: message,
 	                                    name: 'password'
 	                                });
 	                            },
 	                            validators: [(0, _valyaStandardValidator2['default'])({ message: 'Password is required' })],
-	                            initialValidation: true },
+	                            silentInitValidation: true },
 	                        _react2['default'].createElement('input', {
 	                            type: 'text',
 	                            id: 'password',
@@ -214,43 +432,6 @@
 	                            className: 'form-control',
 	                            value: this.state.value,
 	                            onChange: this.setField.bind(this, 'password') })
-	                    )
-	                ),
-	                _react2['default'].createElement(
-	                    'div',
-	                    { className: 'form-group' },
-	                    _react2['default'].createElement(
-	                        'label',
-	                        null,
-	                        'Set your browser'
-	                    ),
-	                    _react2['default'].createElement(
-	                        'div',
-	                        null,
-	                        _react2['default'].createElement(
-	                            _defaultValidator2['default'],
-	                            {
-	                                value: this.state.browser,
-	                                onEnd: function (isValid, message) {
-	                                    _this.props.foma.setValidationInfo({
-	                                        isValid: isValid,
-	                                        message: message,
-	                                        name: 'browser'
-	                                    });
-	                                },
-	                                validators: [(0, _valyaStandardValidator2['default'])({ message: 'Set your browser' })],
-	                                initialValidation: true },
-	                            ['chrome', 'firefox', 'opera', 'safari'].map(function (browser) {
-	                                return _react2['default'].createElement(
-	                                    'div',
-	                                    {
-	                                        className: (0, _classnames2['default'])(browser, { 'selected-browser': _this.state.browser === browser }),
-	                                        onClick: _this.setBrowser.bind(_this, browser),
-	                                        key: browser },
-	                                    browser
-	                                );
-	                            })
-	                        )
 	                    )
 	                ),
 	                this.props.foma.renderWarning({
@@ -275,12 +456,12 @@
 	        }
 	    }]);
 
-	    var _FomaWarningValya = FomaWarningValya;
-	    FomaWarningValya = (0, _foma2['default'])(FomaWarningValya) || FomaWarningValya;
-	    return FomaWarningValya;
+	    var _UnlimitedGroups = UnlimitedGroups;
+	    UnlimitedGroups = (0, _foma2['default'])(UnlimitedGroups) || UnlimitedGroups;
+	    return UnlimitedGroups;
 	})(Component);
 
-	_reactDom2['default'].render(_react2['default'].createElement(FomaWarningValya, null), document.querySelector('.main'));
+	_reactDom2['default'].render(_react2['default'].createElement(UnlimitedGroups, null), document.querySelector('.main'));
 
 /***/ },
 /* 1 */
@@ -19969,6 +20150,10 @@
 
 	                this._validate(props.value);
 	            }
+
+	            if (props.enabled && props.silentInitValidation) {
+	                this._silentValidate(props.value);
+	            }
 	        }
 
 	        _createClass(_class, [{
@@ -20032,6 +20217,19 @@
 	                }, _Promise.resolve());
 
 	                validators.then(this._onResolve.bind(this, value), this._onCatch.bind(this, value));
+	            }
+	        }, {
+	            key: '_silentValidate',
+	            value: function _silentValidate(value) {
+	                if ('onEnd' in this.props) {
+	                    var validators = this.props.validators.reduce(function (sequence, next) {
+	                        return sequence.then(function () {
+	                            return next.validator(value, next.params);
+	                        });
+	                    }, _Promise.resolve());
+
+	                    validators.then(this.props.onEnd.bind(this, true, ''), this.props.onEnd.bind(this, false, ''));
+	                }
 	            }
 	        }, {
 	            key: 'render',
@@ -21640,12 +21838,14 @@
 	                isInvalid: false,
 	                isValid: true,
 	                isValidating: false,
-	                isWarnVisible: false
+	                isWarnVisible: false,
+	                childrenInvalidFields: []
 	            };
 
 	            this.api = {
 	                foma: {
 	                    setValidationInfo: this.setValidationInfo.bind(this),
+	                    setChildrenValidationInfo: this.setChildrenValidationInfo.bind(this),
 	                    viewWarning: this.viewWarning.bind(this),
 	                    renderWarning: this.renderWarning.bind(this)
 	                }
@@ -21655,26 +21855,14 @@
 	            this.fields = {};
 	        }
 
-	        /**
-	         * Validation method for All form fields. All fields are required.
-	         * @param {Object} validatorInfo - information from validator (Valya)
-	         * @param {Boolean} validatorInfo#isValid - validation flag for the field
-	         * @param {String} validatorInfo#message - validatation message for the field
-	         * @param {String} validatorInfo#name - name of the field
-	         */
-
 	        _createClass(_class, [{
-	            key: 'setValidationInfo',
-	            value: function setValidationInfo(validatorInfo) {
-	                var invalidFields = this.state.invalidFields.slice();
-	                var idx = invalidFields.indexOf(validatorInfo.name);
-
-	                // Valid and NOT found ===OR=== Invalid and FOUND
-	                if (validatorInfo.isValid && idx === -1 || !validatorInfo.isValid && idx !== -1) {
-	                    return;
-	                }
-
-	                this.setState({ isValidating: true });
+	            key: '_manageInvalidFields',
+	            value: function _manageInvalidFields(invalidFields, validatorInfo, idx) {
+	                this.setState({
+	                    isValidating: true,
+	                    isValid: false,
+	                    isInvalid: true
+	                });
 
 	                // Invalid and NOT found
 	                if (idx === -1) {
@@ -21686,13 +21874,67 @@
 	                        invalidFields.splice(idx, 1);
 	                    }
 
+	                return invalidFields;
+	            }
+
+	            /**
+	             * Validation method for All form fields. All fields are required.
+	             * @param {Object} validatorInfo - information from validator (Valya)
+	             * @param {Boolean} validatorInfo#isValid - validation flag for the field
+	             * @param {String} validatorInfo#message - validatation message for the field
+	             * @param {String} validatorInfo#name - name of the field
+	             */
+	        }, {
+	            key: 'setValidationInfo',
+	            value: function setValidationInfo(validatorInfo) {
+	                var invalidFields = this.state.invalidFields.slice();
+	                var childrenInvalidFields = this.state.childrenInvalidFields;
+	                var idx = invalidFields.indexOf(validatorInfo.name);
+
+	                // Valid and NOT found ===OR=== Invalid and FOUND
+	                if (validatorInfo.isValid && idx === -1 || !validatorInfo.isValid && idx !== -1) {
+	                    return;
+	                }
+
+	                invalidFields = this._manageInvalidFields(invalidFields, validatorInfo, idx);
+
+	                // Made for future features, may be...
 	                this.fields[validatorInfo.name] = validatorInfo;
 
 	                this.setState({
 	                    isValidating: false,
-	                    isValid: !invalidFields.length,
-	                    isInvalid: Boolean(invalidFields.length),
+	                    isValid: !invalidFields.length && !childrenInvalidFields.length,
+	                    isInvalid: Boolean(invalidFields.length) || Boolean(childrenInvalidFields.length),
 	                    invalidFields: invalidFields
+	                });
+	            }
+
+	            /**
+	             * Validation method for child Foma instances. All fields are required.
+	             * @param {Object} validatorInfo - information from validator (Valya)
+	             * @param {Boolean} validatorInfo#isValid - validation flag for the field
+	             * @param {String} validatorInfo#message - validatation message for the field
+	             * @param {String} validatorInfo#name - name of the field
+	             */
+	        }, {
+	            key: 'setChildrenValidationInfo',
+	            value: function setChildrenValidationInfo(validatorInfo) {
+	                var invalidFields = this.state.invalidFields;
+	                var childrenInvalidFields = this.state.childrenInvalidFields.slice();
+	                var idx = childrenInvalidFields.indexOf(validatorInfo.name);
+
+	                // Valid and NOT found ===OR=== Invalid and FOUND
+	                if (validatorInfo.isValid && idx === -1 || !validatorInfo.isValid && idx !== -1) {
+	                    return;
+	                }
+
+	                childrenInvalidFields = this._manageInvalidFields(childrenInvalidFields, validatorInfo, idx);
+
+	                this.setState({
+	                    isValidating: false,
+	                    isValid: !invalidFields.length && !childrenInvalidFields.length,
+	                    isInvalid: Boolean(invalidFields.length) || Boolean(childrenInvalidFields.length),
+	                    childrenInvalidFields: childrenInvalidFields
 	                });
 	            }
 	        }, {
@@ -41313,6 +41555,51 @@
 	};
 
 	module.exports = exports['default'];
+
+
+/***/ },
+/* 396 */
+/***/ function(module, exports) {
+
+	/* eslint-disable no-unused-vars */
+	'use strict';
+	var hasOwnProperty = Object.prototype.hasOwnProperty;
+	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+	function toObject(val) {
+		if (val === null || val === undefined) {
+			throw new TypeError('Object.assign cannot be called with null or undefined');
+		}
+
+		return Object(val);
+	}
+
+	module.exports = Object.assign || function (target, source) {
+		var from;
+		var to = toObject(target);
+		var symbols;
+
+		for (var s = 1; s < arguments.length; s++) {
+			from = Object(arguments[s]);
+
+			for (var key in from) {
+				if (hasOwnProperty.call(from, key)) {
+					to[key] = from[key];
+				}
+			}
+
+			if (Object.getOwnPropertySymbols) {
+				symbols = Object.getOwnPropertySymbols(from);
+				for (var i = 0; i < symbols.length; i++) {
+					if (propIsEnumerable.call(from, symbols[i])) {
+						to[symbols[i]] = from[symbols[i]];
+					}
+				}
+			}
+		}
+
+		return to;
+	};
 
 
 /***/ }
