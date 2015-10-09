@@ -29,10 +29,12 @@ const groupFields = {
     }
 };
 
-let groupValidator = (fieldName) => {
+let groupFieldValidator = (fieldName, invalidFields) => {
     return {
-        validator: (group, params) => {
-            if (group[fieldName]) {
+        validator: (value, params) => {
+            if (value && parseInt(value) === 10 ||
+                !value && !invalidFields.length ||
+                !value && invalidFields.length === 1 && invalidFields[0] === fieldName) {
                 return Promise.resolve();
             }
 
@@ -44,6 +46,7 @@ let groupValidator = (fieldName) => {
     }
 };
 
+
 @Foma
 class GroupComponent extends Component {
     static displayName = 'GroupComponent';
@@ -51,7 +54,10 @@ class GroupComponent extends Component {
     static propTypes = {
         index: PropTypes.number.isRequired,
         group: PropTypes.object.isRequired,
-        setGroupField: PropTypes.func.isRequired
+        setGroupField: PropTypes.func.isRequired,
+        updateParentValidation: PropTypes.func.isRequired,
+        allGroups: PropTypes.array.isRequired,
+        allInvalidGroups: PropTypes.number.isRequired
     }
 
     onEndCallback (name) {
@@ -67,7 +73,8 @@ class GroupComponent extends Component {
                     <Validator
                         value={this.props.group[field]}
                         onEnd={this.onEndCallback(field)}
-                        validators={[groupValidator(field)]}>
+                        validators={[groupFieldValidator(field, this.props.invalidFields)]}
+                        silentInitValidation={true}>
                         <input
                             type="text"
                             id={field}
@@ -82,8 +89,72 @@ class GroupComponent extends Component {
         });
     }
 
+    groupOnEndCallback (name) {
+        return (isValid, message) => {
+            this.props.updateParentValidation({isValid, message, name});
+        };
+    }
+
     render () {
-        return (<div>{this.renderFields(Object.keys(groupFields))}</div>);
+        let fields = Object.keys(groupFields);
+
+        return (
+            <div className="form-field">
+                {this.renderFields(fields)}
+
+                <Validator
+                    value={this.props.group}
+                    onEnd={this.groupOnEndCallback('group ' + (this.props.index + 1))}
+                    silentInitValidation={true}
+                    validators={[
+                        {
+                            validator: (group, params) => {
+                                var notEmptyFields = fields.filter(function (e, i) {
+                                    return !(group[e] === '' || !group[e]);
+                                });
+
+                                var allFieldsAreEmpty = !notEmptyFields.length;
+                                var allRequiredFieldsFilled = notEmptyFields.length === fields.length;
+
+                                if (allFieldsAreEmpty) {
+
+                                    // Если групп две и более, то надо
+                                    // проверить индекс конкретной группы
+                                    // если он 0, то реджектить
+                                    if (this.props.allGroups.length === 1) {
+                                        return Promise.reject(params.allFieldsRequired);
+                                    }
+
+                                    if (this.props.allGroups.length > 1 && !this.props.index) {
+                                        return Promise.reject(params.allFieldsRequired);
+                                    }
+
+                                    return Promise.resolve();
+                                }
+
+                                if (allRequiredFieldsFilled) {
+                                    return new Promise((resolve, reject) => {
+                                        setTimeout(() => {
+                                            if (this.props.isValid) {
+                                                resolve();
+                                            } else {
+                                                reject(params.haveInvalidFields)
+                                            }
+                                        }, 0);
+                                    });
+                                }
+
+                                return Promise.reject(params.allFieldsRequired);
+                            },
+                            params: {
+                                allFieldsRequired: 'All fields are required',
+                                haveInvalidFields: 'You have invalid fields, fix it'
+                            }
+                        }
+                    ]}>
+                </Validator>
+            </div>
+        );
     }
 }
 
@@ -158,7 +229,7 @@ class UnlimitedGroups extends Component {
                             });
                         }}
                         validators={[standardValidator({message: 'Username is required'})]}
-                        initialValidation={true}>
+                        silentInitValidation={true}>
                         <input
                             type="text"
                             id="username"
@@ -170,15 +241,19 @@ class UnlimitedGroups extends Component {
                     </Validator>
                 </div>
 
+                <label htmlFor="field">UnlimitedGroups here</label>
                 {this.state.groups.map((group, i) => {
                     var props = {
                         group: group,
+                        allGroups: this.state.groups,
+                        allInvalidGroups: this.props.childrenInvalidFields.length,
                         setGroupField: ::this.setGroupField,
+                        updateParentValidation: ::this.props.foma.setChildrenValidationInfo,
                         index: i,
                         key: i
                     };
 
-                    return <GroupComponent {...props} />;
+                    return (<GroupComponent {...props} />);
                 })}
 
                 <div className="form-group">
@@ -202,7 +277,7 @@ class UnlimitedGroups extends Component {
                             });
                         }}
                         validators={[standardValidator({message: 'Password is required'})]}
-                        initialValidation={true}>
+                        silentInitValidation={true}>
                         <input
                             type="text"
                             id="password"
