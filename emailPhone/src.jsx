@@ -3,49 +3,43 @@ import ReactDOM from 'react-dom';
 import cn from 'classnames';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
+import update from 'react-addons-update';
+import * as validators from './validators';
+
+function checkOtherFields (group, fields) {
+    return fields.reduce(function (result, field) {
+        return !(!result || !group[field]);
+    }, true);
+}
+
+function fieldValidator (fields, fieldName) {
+    return {
+        validator: (group, params) => {
+            if (group[fieldName]) {
+                return validators[fieldName](group[fieldName]) ? Promise.resolve() : Promise.reject(params.message);
+            } else {
+                if (checkOtherFields(group, fields)) {
+                    return Promise.resolve();
+                }
+
+                return Promise.reject(params.required);
+            }
+        },
+        params: {
+            message: `${fieldName} isn't correct`,
+            required: `${fieldName} is required`
+        }
+    };
+}
 
 const requiredFields = {
     email: {
         name: 'email',
-        validator: ({dependentFieldName, fieldName}) => {
-            return {
-                validator: (value, params) => {
-                    if (value[fieldName] || value[dependentFieldName]) {
-                        return Promise.resolve();
-                    }
-
-                    if (!value[dependentFieldName] && !value[fieldName]) {
-                        return Promise.reject(params.message);
-                    }
-
-                    return Promise.reject(params.message);
-                },
-                params: {
-                    message: 'Email is required'
-                }
-            }
-        }
+        validator: fieldValidator
     },
     phone: {
         name: 'phone',
-        validator: ({dependentFieldName, fieldName}) => {
-            return {
-                validator: (value, params) => {
-                    if (value[fieldName] || value[dependentFieldName]) {
-                        return Promise.resolve();
-                    }
-
-                    if (!value[dependentFieldName] && !value[fieldName]) {
-                        return Promise.reject(params.message);
-                    }
-
-                    return Promise.reject(params.message);
-                },
-                params: {
-                    message: 'Phone is required'
-                }
-            }
-        }
+        validator: fieldValidator
     }
 };
 
@@ -64,13 +58,14 @@ class EmailPhone extends React.Component {
         };
     }
 
-    setField (name, e) {
-        var state = this.state;
+    setField (name, event) {
+        var state = update(this.state, {
+            fields: {
+                [name]: {$set: event.target.value}
+            }
+        });
 
-        this.setState({fields: {
-            email: name === 'email' ? e.target.value : this.state.fields.email,
-            phone: name === 'phone' ? e.target.value : this.state.fields.phone
-        }});
+        this.setState(state);
     }
 
     onSubmit (e) {
@@ -97,11 +92,10 @@ class EmailPhone extends React.Component {
                     <Validator
                         value={this.state.fields}
                         onEnd={this.onEndValidation(field)}
-                        validators={[requiredFields[field].validator({
-                            dependentFieldName: field === 'email' ? 'phone' : 'email',
-                            fieldName: field
-                        })]}
-                        initialValidation={true}>
+                        validators={[requiredFields[field].validator(fields.filter((element) => {
+                            return element !== field;
+                        }), field)]}
+                        silentInitValidation={true}>
                         <input
                             type="text"
                             id={field}

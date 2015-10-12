@@ -34,6 +34,7 @@
     "foma-warning": "0.x",
     "object-assign": "^4.0.1",
     "react": "^0.14.x",
+    "react-addons-update": "^0.14.0",
     "react-dom": "^0.14.0",
     "valya": "^0.2.0",
     "valya-standard-validator": "^1.0.0"
