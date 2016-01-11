@@ -1,191 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import update from 'react-addons-update';
 import cn from 'classnames';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
-
-const { Component } = React;
+import assign from 'object-assign';
+import * as validators from './validators';
 
 const requiredFields = {
     day: {
         name: 'awesome day',
-        validator: () => {
-            return {
-                validator (value, params) {
-                    let currentValue = !isNaN(value.day) && parseInt(value.day);
-                    let currentMonth = !isNaN(value.month) && parseInt(value.month);
-                    let currentYear = !isNaN(value.year) && String(value.year).length === 4 && parseInt(value.year);
-
-                    // Проверяем по месяцу
-                    if (currentMonth) {
-                        return params.monthCheck({
-                            value: currentValue,
-                            month: currentMonth,
-                            year: currentYear,
-                            params
-                        });
-                    }
-
-                    if (currentValue) {
-                        return params.simpleValueCheck(currentValue, params, 31);
-                    }
-
-
-                    return Promise.reject(params.message);
-                },
-                params: {
-                    message: 'Field is required',
-                    messageMin: 'Day should be greater or equal 1',
-                    messageMax: (lastDay) => {
-                        let messages = {
-                            messageMax: 'Day should be less or equal ',
-                            message29: 'There are 28 days in February',
-                            message28: 'There are 29 days in February'
-                        };
-
-                        if (lastDay === 28) {
-                            return messages.message29;
-                        }
-
-                        if (lastDay === 29) {
-                            return messages.message28;
-                        }
-
-                        return messages.messageMax + lastDay;
-                    },
-                    isLeapYear: (year) => {
-                        if (!year) {
-                            return false;
-                        }
-
-                        return ((year % 4 == 0) && (year % 100 != 0)) || (year % 400 == 0);
-                    },
-                    lastDay: (monthNumber, isLeapYear) => {
-                        const months = ['', 31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-                        return months[monthNumber];
-                    },
-                    monthCheck: ({value, month, year, params}) => {
-
-                        // Если февраль
-                        if (month === 2) {
-
-                            // Если есть год, надо проверить, високосный ли он
-                            // если да, то дней должно быть 29, иначе 28
-                            let isLeapYear = params.isLeapYear(year);
-
-                            if (value) {
-                                let lastDay = params.lastDay(month, isLeapYear);
-
-                                return params.simpleValueCheck(value, params, lastDay).then(() => {
-                                    return Promise.resolve();
-                                }).catch((promiseMessage) => {
-                                    return Promise.reject(promiseMessage);
-                                });
-                            }
-
-                            return Promise.reject(params.message);
-                        }
-
-                        // Если это другой месяц
-                        else {
-
-                            // То лишь бы было значение в интервале
-                            // от 1 до последней даты месяца
-                            if (value) {
-                                let lastDay = params.lastDay(month);
-
-                                return params.simpleValueCheck(value, params, lastDay).then(() => {
-                                    return Promise.resolve();
-                                }, (promiseMessage) => {
-                                    return Promise.reject(promiseMessage);
-                                });
-                            }
-
-                            return Promise.reject(params.message)
-                        }
-                    },
-                    simpleValueCheck: (value, params, lastDay) => {
-
-                        if (value >= 1 && value <= lastDay) {
-                            return Promise.resolve();
-                        }
-
-                        if (value < 1) {
-                            return Promise.reject(params.messageMin)
-                        }
-
-                        if (value > lastDay) {
-                            return Promise.reject(params.messageMax(lastDay));
-                        }
-
-                        return Promise.reject(params.message);
-                    }
-                }
-            }
-        }
+        validator: validators.day
     },
     month: {
         name: 'awesome month',
-        validator: () => {
-            return {
-                validator (value, params) {
-                    let currentValue = !isNaN(value.month) && parseInt(value.month);
-
-                    if (currentValue >= 1 && currentValue <= 12) {
-                        return Promise.resolve();
-                    }
-
-                    if (currentValue < 1) {
-                        return Promise.reject(params.messageMin);
-                    }
-
-                    if (currentValue > 12) {
-                        return Promise.reject(params.messageMax);
-                    }
-
-                    return Promise.reject(params.message);
-                },
-                params: {
-                    message: 'Month should be from 1 to 12',
-                    messageMin: 'Month should be greater or equal then 1',
-                    messageMax: 'Year should be less or equal then 12',
-                }
-            }
-        }
+        validator: validators.month
     },
     year: {
         name: 'awesome year',
-        validator: () => {
-            return {
-                validator (value, params) {
-                    let currentYear = !isNaN(value.year) && parseInt(value.year) || null;
-
-                    if (currentYear >= 1900 && currentYear <= 2015) {
-                        return Promise.resolve();
-                    }
-
-                    if (currentYear < 1900) {
-                        return Promise.reject(params.messageMin);
-                    }
-
-                    if (currentYear > 2015) {
-                        return Promise.reject(params.messageMax);
-                    }
-
-                    return Promise.reject(params.message);
-                },
-                params: {
-                    message: 'Year should be from 1900 to 2015',
-                    messageMin: 'Year should be greater or equal then 1900',
-                    messageMax: 'Year should be less or equal then 2015'
-                }
-            }
-        }
+        validator: validators.year
     }
 };
 
 @Foma
-class Birthday extends Component {
+class Birthday extends React.Component {
     static displayName = 'Birthday';
 
     constructor (props) {
@@ -201,14 +39,13 @@ class Birthday extends Component {
     }
 
     setField (name, event) {
-        var state = this.state;
-        var bday = this.state.birthday;
+        let newState = update(this.state, {
+            birthday: {
+                [name]: {$set: event.target.value}
+            }
+        });
 
-        this.setState({birthday: {
-            day: name === 'day' ? event.target.value : bday.day,
-            month: name === 'month' ? event.target.value : bday.month,
-            year: name === 'year' ? event.target.value : bday.year
-        }});
+        this.setState(newState);
     }
 
     onSubmit (event) {
@@ -233,16 +70,17 @@ class Birthday extends Component {
                 <div className="form-group" key={i}>
                     <label htmlFor={field}>{field}</label>
                     <Validator
-                        value={this.state.birthday}
+                        value={field === 'day' ? this.state.birthday : this.state.birthday[field]}
                         onEnd={this.onEndValidation(field)}
-                        validators={[requiredFields[field].validator()]}
-                        initialValidation={true}>
+                        validators={requiredFields[field].validator()}
+                        silentInitValidation={true}>
                         <input
                             type="text"
                             id={field}
                             name={field}
                             placeholder={field}
                             className="form-control"
+                            autoComplete="off"
                             value={this.state.birthday[field]}
                             maxLength={field === 'year' ? 4 : 2}
                             minLength={field === 'year' ? 4 : 2}
@@ -254,7 +92,7 @@ class Birthday extends Component {
     }
 
     render () {
-        var fields = ['day', 'month', 'year'];
+        var fields = Object.keys(requiredFields);
         return (
             <form style={{width: '600px', padding: '50px 0 0 50px'}} noValidate>
                 <h2>Valya (foma, foma-warning) example for birthday fields</h2>

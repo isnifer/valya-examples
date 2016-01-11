@@ -2,11 +2,29 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Validator from '../defaultValidator';
 import Foma from 'foma';
-import standardValidator from 'valya-standard-validator';
+
+function asyncValidator (fieldName) {
+    return {
+        validator: (value, params) => {
+            return new Promise(function (resolve, reject) {
+                setTimeout(function () {
+                    if (value) {
+                        resolve();
+                    }
+
+                    reject(params.message);
+                }, 4000);
+            });
+        },
+        params: {
+            message: `${fieldName} is required`
+        }
+    }
+}
 
 @Foma
-class FomaLovesValya extends React.Component {
-    static displayName = 'FomaLovesValya';
+class FomaAsync extends React.Component {
+    static displayName = 'FomaAsync';
 
     constructor (props) {
         super(props);
@@ -25,6 +43,13 @@ class FomaLovesValya extends React.Component {
         alert('You successfully submited form!');
     }
 
+    onEndCallback (name) {
+        return (isValid, message) => {
+            console.log(isValid, message)
+            this.props.foma.setValidationInfo({isValid, message, name});
+        }
+    }
+
     render () {
         return (
             <form style={{width: '500px', padding: '50px 0 0 50px'}} noValidate>
@@ -32,14 +57,9 @@ class FomaLovesValya extends React.Component {
                 <div className="form-group">
                     <Validator
                         value={this.state.value}
-                        onEnd={(isValid, message) => {
-                            this.props.foma.setValidationInfo({
-                                isValid,
-                                message,
-                                name: 'value'
-                            });
-                        }}
-                        validators={[standardValidator()]}
+                        onStart={this.onEndCallback('value')}
+                        onEnd={this.onEndCallback('value')}
+                        validators={[asyncValidator('value')]}
                         silentInitValidation={true}>
                         <input
                             type="text"
@@ -64,4 +84,4 @@ class FomaLovesValya extends React.Component {
     }
 }
 
-ReactDOM.render(<FomaLovesValya />, document.querySelector('.main'));
+ReactDOM.render(<FomaAsync />, document.querySelector('.main'));

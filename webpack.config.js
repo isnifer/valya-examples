@@ -12,7 +12,9 @@ var examples = [
     'fomaWarning',
     'birthday',
     'unlimitedGroups',
-    'emailPhone'
+    'emailPhone',
+    'fomaAsync',
+    'table'
 ];
 
 examples.forEach(function (element) {

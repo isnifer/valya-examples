@@ -18,7 +18,8 @@ class ValyaExamples extends React.Component {
                 'fomaWarning',
                 'birthday',
                 'unlimitedGroups',
-                'emailPhone'
+                'emailPhone',
+                'fomaAsync'
             ]
         };
     }
